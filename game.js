@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   class Game {
     constructor() {
-      this.word = randomWord();
+      this.word;
       this.wrongGuesses = 0;
       this.allGuesses = [];
       this.maxWrongGuesses = 6;
@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
       this.word = randomWord();
       this.wrongGuesses = 0;
       this.allGuesses = [];
+      Array.prototype.slice.call(wordSpaces.childNodes).forEach(node => {
+        if (node.tagName === 'SPAN') {
+          node.remove();
+        }
+      });
     }
 
     startGame() {
@@ -48,23 +53,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const game = new Game();
   game.startGame();
-  console.log(game.word);
-  setTimeout(() => {
-    game.startGame();
-    console.log(game.word);
-  }, 1000);
-  setTimeout(() => {
-    game.startGame();
-    console.log(game.word);
-  }, 2000);
-  setTimeout(() => {
-    game.startGame();
-    console.log(game.word);
-  }, 3000);
-  setTimeout(() => {
-    game.startGame();
-    console.log(game.word);
-  }, 4000);
-
 });
 
