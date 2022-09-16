@@ -12,8 +12,12 @@ const randomWord = (function() {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
+  const body = document.querySelector('body');
   const message = document.querySelector('#message');
   const wordSpaces = document.querySelector('#spaces');
+  const guesses = document.querySelector('#guesses');
+  const newGameLink = document.querySelector('a');
+  const apples = document.querySelector('#apples');
 
   class Game {
     constructor() {
@@ -21,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.wrongGuesses = 0;
       this.allGuesses = [];
       this.maxWrongGuesses = 6;
+      this.end = false;
     }
 
     allWordsChosen() {
@@ -31,11 +36,16 @@ document.addEventListener('DOMContentLoaded', () => {
       this.word = randomWord();
       this.wrongGuesses = 0;
       this.allGuesses = [];
-      Array.prototype.slice.call(wordSpaces.childNodes).forEach(node => {
-        if (node.tagName === 'SPAN') {
-          node.remove();
-        }
+      this.end = false;
+
+      document.querySelectorAll('span').forEach(span => {
+        span.remove();
       });
+
+      message.textContent = '';
+      newGameLink.classList.add('hidden');
+      apples.classList.remove(apples.classList[0]);
+      body.classList.remove(body.classList[0]);
     }
 
     startGame() {
@@ -49,9 +59,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     }
+
+    singleTurn(event) {
+      if (event.key.length === 1 && event.key.match(/[a-z]/i)) {
+        this.userGuessesLetter(event.key);
+        if (this.end) {
+          document.removeEventListener('keyup', this.singleTurn);
+          newGameLink.classList.remove('hidden');
+        }
+      }
+    }
+
+    userGuessesLetter(letter) {
+      if (this.allGuesses.includes(letter)) {
+        return;
+      }
+
+      this.allGuesses.push(letter);
+      const guess = document.createElement('span');
+      guess.textContent = letter;
+      guesses.appendChild(guess);
+
+      this.word.includes(letter) ? this.correctGuess(letter) : this.wrongGuess();
+    }
+
+    correctGuess(letter) {
+      const matchingIdx = [];
+      this.word.split('').forEach((char, idx) => {
+        if (char === letter) {
+          matchingIdx.push(idx);
+        }
+      });
+
+      const wordBlanks = Array.prototype.slice.call(document.querySelectorAll('#spaces span'));
+
+      matchingIdx.forEach(idx => {
+        wordBlanks[idx].textContent = letter;
+      });
+
+      if (wordBlanks.every(span => span.textContent)) {
+        this.won();
+      }
+    }
+
+    wrongGuess() {
+      apples.classList.remove(`guess_${this.wrongGuesses}`);
+
+      this.wrongGuesses += 1;
+      apples.classList.add(`guess_${this.wrongGuesses}`);
+
+      if (this.wrongGuesses === this.maxWrongGuesses) {
+        this.lose();
+      }
+    }
+
+    lose() {
+      body.classList.add('lose');
+      message.textContent = "Sorry, you didn't guess the word."
+      this.end = true;
+    }
+
+    won() {
+      body.classList.add('win');
+      message.textContent = `You won! The word is ${this.word.toUpperCase()}`;
+      this.end = true;
+    }
   }
 
+  
   const game = new Game();
   game.startGame();
+
+  document.addEventListener('keyup', game.singleTurn.bind(game));
+
+  newGameLink.addEventListener('click', event => {
+    event.preventDefault();
+    game.startGame();
+  });
 });
 
